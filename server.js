@@ -19,7 +19,7 @@ app.use(cors({
 }));
 
 // MongoDB connection
-const MONGO_URI = process.env.MONGO_URI || process.env.DATABASE_URL || 'mongodb+srv://gulshandigitalzone_db_user:tODn6yUKgNIJ8D8R@contactdb.tnhri4l.mongodb.net/?appName=contactdb';
+const MONGO_URI = process.env.MONGO_URI || process.env.DATABASE_URL;
 mongoose.connect(MONGO_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true
