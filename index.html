@@ -3,9 +3,9 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Contact Developer</title>
+  <title>Contact + Admin — Gulshan</title>
   <style>
-    :root{--bg:#0d1117;--card:#111827;--muted:#9ca3af;--accent:#22d3ee;--radius:12px;color: #e5e7eb}
+    :root{--bg:#0d1117;--card:#111827;--muted:#9ca3af;--accent:#22d3ee;--radius:12px;color:#e5e7eb}
     *{box-sizing:border-box}
     body{margin:0;font-family:Inter,system-ui,Arial;background:var(--bg);color:var(--text,#e5e7eb);padding:24px}
     .top{display:flex;justify-content:space-between;align-items:center;gap:12px}
@@ -30,6 +30,33 @@
     .close-x{float:right;cursor:pointer}
     .status{margin-top:10px}
     .hidden-card{display:none !important}
+
+    /* Toast styles (center-screen) */
+    .toast {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(0.95);
+      padding: 14px 22px;
+      color: #fff;
+      border-radius: 10px;
+      font-size: 16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.45);
+      opacity: 0;
+      pointer-events: none;
+      z-index: 99999;
+      transition: opacity 260ms ease, transform 260ms ease;
+      display: inline-block;
+      white-space: nowrap;
+    }
+    .toast.show {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1);
+      pointer-events: auto;
+    }
+    .toast.success { background: #16a34a; } /* green */
+    .toast.error   { background: #dc2626; } /* red */
+
     @media (max-width:600px){
       body{padding:12px}
       .container{margin:12px auto}
@@ -40,67 +67,43 @@
       th,td{padding:6px}
       .btn{padding:8px 10px;font-size:12px}
       .modal-card{width:90vw;max-width:360px}
+      .toast{font-size:15px;padding:12px 16px}
     }
   </style>
-
-  <style>
-  .toast {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%) scale(0.9);
-    background: #16a34a; /* Green */
-    color: white;
-    padding: 14px 22px;
-    border-radius: 10px;
-    font-size: 16px;
-    box-shadow: 0 6px 20px rgba(0,0,0,0.4);
-    opacity: 0;
-    pointer-events: none;
-    z-index: 99999;
-    transition: 0.3s ease;
-  }
-  .toast.show {
-    opacity: 1;
-    transform: translate(-50%, -50%) scale(1);
-  }
-</style>
-
 </head>
 <body>
-
 
   <div class="container">
     <div class="grid">
       <!-- Left: Contact form -->
       <div id="contactCard" class="card">
         <h2>
-            <div class="top container">
-    <div class="brand">Developer Contact</div>
-    <div class="top-right">
-      <button id="adminBtn" class="admin-btn">Admin Login</button>
-    </div>
-  </div>
-
+          <div class="top container">
+            <div class="brand">Contact Form</div>
+            <div class="top-right">
+              <button id="adminBtn" class="admin-btn">Admin Login</button>
+            </div>
+          </div>
         </h2>
-        <!-- <p class="muted">User apna name, phone aur long message yahan submit karega. Data backend (MongoDB) pe jayega.</p> -->
-        <form id="contactForm">
+
+        <p class="muted">User apna name, phone aur long message yahan submit karega. Data backend (MongoDB) pe jayega.</p>
+
+        <form id="contactForm" novalidate>
           <label for="name">Name</label>
-          <input id="name" name="name" required placeholder="Enter Name" />
+          <input id="name" name="name" required placeholder="Aapka Naam" />
 
           <label for="phone">Phone</label>
-          <!-- regex simplified and correct -->
           <input id="phone" name="phone" required placeholder="10-digit phone number" pattern="^[0-9]{7,15}$" />
 
           <label for="message">Message</label>
-          <textarea id="message" name="message" required placeholder="Please explain in detail in what regard you need help."></textarea>
+          <textarea id="message" name="message" required placeholder="Lambi message likhe..."></textarea>
 
           <button type="submit" class="btn primary">Send Message</button>
-          <div id="formStatus" class="status small"></div>
+          <div id="formStatus" class="status small" role="status" aria-live="polite"></div>
         </form>
 
         <hr style="margin:18px 0;border:none;border-top:1px solid rgba(255,255,255,.04)" />
-        <p class="small muted">People outside India are requested to include their email ID in the message.</p>
+        <p class="small muted">Apna Suggession yahan dein.</p>
       </div>
 
       <!-- Right: Admin panel (login & messages) -->
@@ -156,23 +159,44 @@
     </div>
   </div>
 
+  <!-- Toast elements -->
+  <div id="toastSuccess" class="toast success" role="status" aria-live="polite" style="display:none"></div>
+  <div id="toastError" class="toast error" role="alert" aria-live="assertive" style="display:none"></div>
+
   <script>
-function showToast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-
-  setTimeout(() => {
-    t.classList.remove('show');
-  }, 2000); // 2 seconds
-}
-
-    
     /********** CONFIG: set your backend URL here **********/
     const API_BASE = 'https://contact-yhxq.onrender.com'; // backend express server
     console.log('API_BASE:', API_BASE);
 
     const qs = (s) => document.querySelector(s);
+
+    // Toast helpers
+    let toastTimer = null;
+    function showToast(type, msg, ms = 2000) {
+      const successEl = document.getElementById('toastSuccess');
+      const errorEl = document.getElementById('toastError');
+      clearTimeout(toastTimer);
+      if (type === 'success') {
+        errorEl.style.display = 'none';
+        successEl.textContent = msg;
+        successEl.style.display = 'inline-block';
+        // small delay to allow transition
+        requestAnimationFrame(()=> successEl.classList.add('show'));
+        toastTimer = setTimeout(()=> {
+          successEl.classList.remove('show');
+          setTimeout(()=> successEl.style.display = 'none', 300);
+        }, ms);
+      } else {
+        successEl.style.display = 'none';
+        errorEl.textContent = msg;
+        errorEl.style.display = 'inline-block';
+        requestAnimationFrame(()=> errorEl.classList.add('show'));
+        toastTimer = setTimeout(()=> {
+          errorEl.classList.remove('show');
+          setTimeout(()=> errorEl.style.display = 'none', 300);
+        }, ms);
+      }
+    }
 
     // Form submit -> POST to backend
     const form = qs('#contactForm');
@@ -187,7 +211,9 @@ function showToast(msg) {
           message: form.message.value.trim()
         };
         if (!payload.name || !payload.phone || !payload.message) {
-          status.textContent = 'Please fill all fields.'; return;
+          status.textContent = 'Please fill all fields.'; 
+          showToast('error', 'Please fill all fields.');
+          return;
         }
 
         // send request
@@ -204,17 +230,20 @@ function showToast(msg) {
 
         // success if HTTP 2xx (res.ok) OR server returned success flag
         if (res.ok || (body && body.success)) {
-          showToast'Message received successfully.We will contact you shortly. Thank you!';
-          form.reset();
+          // show centered green toast for 2 seconds
+          showToast('success', 'Message sent. Thank you!', 2000);
           status.textContent = '';
+          form.reset();
         } else {
           // show server message if available, else response text, else generic
           const errMsg = (body && (body.error || body.message)) || text || 'Send failed.';
           status.textContent = errMsg;
+          showToast('error', errMsg, 2000);
         }
       } catch (err) {
         console.error(err);
         status.textContent = 'Error sending message. Check console.';
+        showToast('error', 'Error sending message. Check console.', 2000);
       }
     });
 
@@ -339,7 +368,6 @@ function showToast(msg) {
     });
 
     refreshBtn.addEventListener('click', () => loadMessages());
-    // toggle showing deleted items
     qs('#toggleDeletedBtn').addEventListener('click', () => {
       showingDeleted = !showingDeleted;
       qs('#toggleDeletedBtn').textContent = showingDeleted ? '↩️ Active' : '🗑️ Deleted';
@@ -380,7 +408,10 @@ function showToast(msg) {
     adminLoggedOut.style.display='block';
   </script>
 
-  <div id="toast" class="toast"></div>
-
+  <!-- Usage notes:
+    1) Set API_BASE to your backend URL.
+    2) Server must implement POST /api/contact and GET /api/messages (protected by Basic Auth).
+    3) Ensure .env ORIGIN matches your Live Server origin (http://127.0.0.1:5500).
+  -->
 </body>
 </html>
