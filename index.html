@@ -96,14 +96,14 @@
 <input id="phone" name="phone" type="number"  required  placeholder="+91 9876543210" pattern="^(\+\d{1,3}\s?)?\d{6,15}$" title="Valid number: +91 9876543210 or 9876543210"/>
 
           <label for="message">Message</label>
-          <textarea id="message" name="message" required placeholder="Lambi message likhe..."></textarea>
+          <textarea id="message" name="message" required placeholder="Please explain in detail in what regard you need help."></textarea>
 
           <button type="submit" class="btn primary">Send Message</button>
           <div id="formStatus" class="status small" role="status" aria-live="polite"></div>
         </form>
 
         <hr style="margin:18px 0;border:none;border-top:1px solid rgba(255,255,255,.04)" />
-        <p class="small muted">Apna Suggession yahan dein.</p>
+        <p class="small muted">People outside India are requested to include their email ID in the message.</p>
       </div>
 
       <!-- Right: Admin panel (login & messages) -->
@@ -113,8 +113,6 @@
           <p class="muted">Last Update <span id="datetime"></span></p>
           
         <div id="adminLoggedOut">
-            <p class="small muted">Aap admin login karke messages dekh sakte ho.</p>
-            <button id="openLogin" class="btn">Open Login</button>
           </div>
          
           <div id="adminLoggedIn" class="admin-panel">
@@ -231,7 +229,7 @@
         // success if HTTP 2xx (res.ok) OR server returned success flag
         if (res.ok || (body && body.success)) {
           // show centered green toast for 2 seconds
-          showToast('success', 'Message sent. Thank you!', 2000);
+          showToast('success', 'Message sent. Thank you!', 5000);
           status.textContent = '';
           form.reset();
         } else {
